@@ -43,8 +43,12 @@ const MatchHistoryPage: React.FC = () => {
         }
         const data: MatchResult[] = await response.json();
         setMatchResults(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) { // Changed 'any' to 'unknown'
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred.');
+        }
         toast.error('Failed to load match history.');
       } finally {
         setLoading(false);
