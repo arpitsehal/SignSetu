@@ -47,8 +47,12 @@ const MatchDetailsPage: React.FC = () => {
         }
         const data: MatchResult = await response.json();
         setMatchDetails(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) { // Changed 'Error' to 'unknown'
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred.');
+        }
         toast.error('Failed to load match details.');
       } finally {
         setLoading(false);
