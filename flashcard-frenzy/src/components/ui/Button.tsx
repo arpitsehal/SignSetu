@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
-interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onAnimationStart'> {
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onAnimationStart' | 'onDragStart'> {
   variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'success'; // Added 'success' variant
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
