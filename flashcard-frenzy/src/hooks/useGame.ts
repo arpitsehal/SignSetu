@@ -1,9 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react'; // Removed useState as it's not directly used here
 import { create } from 'zustand';
-import { supabase } from '@/lib/supabase';
+// Removed supabase import as it's not directly used in this file
 import { toast } from 'react-hot-toast';
 import { Player, Flashcard } from '@/types/game'; // Import Player and Flashcard from the new types file
-import MatchResult from '@/models/MatchResult'; // Import MatchResult model
+// Removed MatchResult import as it's not used
+
+// Define an interface for the structure of a flashcard set
+interface FlashcardSet {
+  flashcards: Flashcard[];
+  // Add any other properties that a flashcard set might have if needed
+}
 
 type GameState = {
   roomId: string | null;
@@ -34,14 +40,7 @@ type GameState = {
   resetGame: () => void;
 };
 
-// Mock data for development
-const MOCK_FLASHCARDS: Flashcard[] = [
-  { id: '1', question: 'What is the capital of France?', answer: 'Paris', points: 100 },
-  { id: '2', question: 'Which planet is known as the Red Planet?', answer: 'Mars', points: 100 },
-  { id: '3', question: 'What is 2 + 2?', answer: '4', points: 100 },
-  { id: '4', question: 'What is the largest mammal?', answer: 'Blue Whale', points: 150 },
-  { id: '5', question: 'Who painted the Mona Lisa?', answer: 'Leonardo da Vinci', points: 150 },
-];
+// Removed MOCK_FLASHCARDS as it's commented out and not used
 
 const useGameStore = create<GameState>((set, get) => ({
   roomId: null,
@@ -55,7 +54,7 @@ const useGameStore = create<GameState>((set, get) => ({
   playedFlashcards: [], // Initialize new state
 
   setRoomId: (roomId) => set({ roomId }),
-  
+
   setCurrentPlayer: (player) => {
     set({ currentPlayer: player });
     // If this is the first player, make them the host
@@ -96,7 +95,7 @@ const useGameStore = create<GameState>((set, get) => ({
       }
       const data = await response.json();
       // Assuming data is an array of flashcard sets, and we want to combine all flashcards
-      const flashcards = data.flatMap((set: any) => set.flashcards);
+      const flashcards = data.flatMap((set: FlashcardSet) => set.flashcards); // Fixed 'any' type
 
       set({
         flashcards,
@@ -114,9 +113,12 @@ const useGameStore = create<GameState>((set, get) => ({
           score: 0,
         })),
       }));
-    } catch (error) {
+    } catch (error: unknown) { // Changed error to unknown
       console.error('Error starting game:', error);
-      toast.error('Failed to start game. Please try again.');
+      toast.error(
+        (error instanceof Error && error.message) ||
+          'Failed to start game. Please try again.'
+      );
     }
   },
 
@@ -149,9 +151,12 @@ const useGameStore = create<GameState>((set, get) => ({
             throw new Error('Failed to save match results');
           }
           toast.success('Match results saved!');
-        } catch (error) {
+        } catch (error: unknown) { // Changed error to unknown
           console.error('Error saving match results:', error);
-          toast.error('Failed to save match results.');
+          toast.error(
+            (error instanceof Error && error.message) ||
+            'Failed to save match results.'
+          );
         }
       }
       return;
@@ -173,7 +178,7 @@ const useGameStore = create<GameState>((set, get) => ({
 
     // Update player score
     const points = isCorrect ? currentFlashcard.points : 0;
-    
+
     set((state) => ({
       players: state.players.map((p) =>
         p.id === currentPlayer.id
@@ -231,7 +236,7 @@ export function useGame(roomId?: string) {
     setRoomId,
     setCurrentPlayer,
     addPlayer,
-    removePlayer,
+    // removePlayer, // Removed from destructuring as it's not directly used in this hook
     updatePlayer,
     startGame,
     nextFlashcard,
@@ -242,9 +247,9 @@ export function useGame(roomId?: string) {
   // Set up real-time subscriptions
   useEffect(() => {
     if (!roomId) return;
-    
+
     setRoomId(roomId);
-    
+
     // In a real app, you would subscribe to real-time updates here
     // For now, we'll just set up a mock player
     const mockPlayer = {
@@ -278,23 +283,23 @@ export function useGame(roomId?: string) {
   // Handle player ready state
   const toggleReady = useCallback(() => {
     if (!currentPlayer) return;
-    
+
     const newReadyState = !currentPlayer.isReady;
     updatePlayer(currentPlayer.id, { isReady: newReadyState });
-    
+
     toast.success(`You are now ${newReadyState ? 'ready' : 'not ready'}`);
   }, [currentPlayer, updatePlayer]);
 
   // Handle starting the game
   const handleStartGame = useCallback(async () => {
     if (!isHost) return;
-    
+
     const readyPlayers = players.filter((p) => p.isReady);
     if (readyPlayers.length < 2) {
       toast.error('Need at least 2 players to start');
       return;
     }
-    
+
     await startGame();
     toast.success('Game started!');
   }, [isHost, players, startGame]);
@@ -302,14 +307,14 @@ export function useGame(roomId?: string) {
   // Handle submitting an answer
   const handleAnswer = useCallback(async (isCorrect: boolean) => {
     if (!currentPlayer || !currentFlashcard || currentFlashcard.answeredBy) return;
-    
+
     await submitAnswer(isCorrect);
   }, [currentPlayer, currentFlashcard, submitAnswer]);
 
   // Handle moving to the next flashcard
   const goToNextFlashcard = useCallback(async () => {
     if (!isHost) return;
-    
+
     await nextFlashcard();
   }, [isHost, nextFlashcard]);
 
@@ -322,7 +327,7 @@ export function useGame(roomId?: string) {
     flashcardIndex,
     gameStatus,
     isHost,
-    
+
     // Actions
     toggleReady,
     startGame: handleStartGame,

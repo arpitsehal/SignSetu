@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
+import { User } from '@supabase/supabase-js'; // Import User type
 
 interface Player {
   id: string;
@@ -18,7 +19,7 @@ interface Player {
 
 interface GameLobbyProps {
   roomId: string;
-  currentUser: any;
+  currentUser: User | null; // Changed from any to User | null
   onStartGame: () => void;
 }
 
@@ -55,12 +56,12 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
     // In a real app, you would fetch the current game state from your database
     // This is mock data for demonstration
     setPlayers([
-      { 
-        id: currentUser?.id || 'current-user-mock', 
-        username: currentUser?.username || 'Player 1', 
-        avatar: currentUser?.avatar || '', 
-        isReady, 
-        isHost: true 
+      {
+        id: currentUser?.id || 'current-user-mock',
+        username: currentUser?.username || 'Player 1',
+        avatar: currentUser?.avatar || '',
+        isReady,
+        isHost: true
       },
       { id: '2', username: 'Alice', avatar: '', isReady: true, isHost: false }, // Alice is now ready by default
       { id: '3', username: 'Bob', avatar: '', isReady: true, isHost: false },   // Bob is now ready by default
@@ -73,9 +74,12 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
       setIsReady(!isReady);
       // In a real app, update the player's ready status in the database
       // await supabase.from('game_players').update({ is_ready: !isReady }).eq('user_id', currentUser.id);
-    } catch (error) {
+    } catch (error: unknown) { // Changed error to unknown
       console.error('Error updating ready status:', error);
-      toast.error('Failed to update ready status');
+      toast.error(
+        (error instanceof Error && error.message) ||
+          'An error occurred while updating ready status'
+      );
       setIsReady(!isReady); // Revert on error
     }
   };
@@ -102,8 +106,8 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Game Lobby</h1>
             <p className="text-gray-600 dark:text-gray-400">Room ID: {roomId}</p>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={copyRoomLink}
             className="mt-4 md:mt-0"
           >
@@ -119,7 +123,7 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
             </h2>
             <div className="space-y-3">
               {players.map((player) => (
-                <div 
+                <div
                   key={player.id}
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
@@ -156,7 +160,7 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Number of Questions
                 </label>
-                <select 
+                <select
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   defaultValue="10"
                 >
@@ -170,7 +174,7 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Category
                 </label>
-                <select 
+                <select
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   defaultValue="general"
                 >
@@ -183,7 +187,7 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
               </div>
 
               <div className="pt-4">
-                <Button 
+                <Button
                   onClick={toggleReady}
                   variant={isReady ? 'secondary' : 'primary'}
                   fullWidth
@@ -192,7 +196,7 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
                   {isReady ? 'Not Ready' : 'I\'m Ready'}
                 </Button>
 
-                  <Button 
+                  <Button
                     onClick={handleStartGame}
                     fullWidth
                     disabled={!isHost || !players.some(p => p.isReady && p.id !== currentUser.id)}
