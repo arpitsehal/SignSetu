@@ -8,18 +8,11 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { User } from '@supabase/supabase-js'; // Import User type
-
-interface Player {
-  id: string;
-  username: string;
-  avatar: string;
-  isReady: boolean;
-  isHost: boolean;
-}
+import { Player } from '@/types/game'; // Import Player type
 
 interface GameLobbyProps {
   roomId: string;
-  currentUser: User | null; // Changed from any to User | null
+  currentUser: Player | null; // Changed from User | null to Player | null
   onStartGame: () => void;
 }
 
@@ -60,11 +53,13 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
         id: currentUser?.id || 'current-user-mock',
         username: currentUser?.username || 'Player 1',
         avatar: currentUser?.avatar || '',
+        score: 0, // Added missing score property
+        isActive: true, // Added missing isActive property
         isReady,
         isHost: true
       },
-      { id: '2', username: 'Alice', avatar: '', isReady: true, isHost: false }, // Alice is now ready by default
-      { id: '3', username: 'Bob', avatar: '', isReady: true, isHost: false },   // Bob is now ready by default
+      { id: '2', username: 'Alice', avatar: '', score: 0, isActive: true, isReady: true, isHost: false }, // Added missing score and isActive
+      { id: '3', username: 'Bob', avatar: '', score: 0, isActive: true, isReady: true, isHost: false },   // Added missing score and isActive
     ]);
     setIsHost(true); // For demo purposes, current user is always host
   };
@@ -199,7 +194,7 @@ export default function GameLobby({ roomId, currentUser, onStartGame }: GameLobb
                   <Button
                     onClick={handleStartGame}
                     fullWidth
-                    disabled={!isHost || !players.some(p => p.isReady && p.id !== currentUser.id)}
+                    disabled={!isHost || !currentUser || !players.some(p => p.isReady && p.id !== currentUser.id)} // Added !currentUser check
                   >
                     Start Game
                   </Button>
