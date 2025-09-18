@@ -55,8 +55,11 @@ export default function AuthForm({ view = 'sign_in' }: AuthFormProps) {
         
         toast.success('Password reset link sent to your email!');
       }
-    } catch (error: any) {
-      toast.error(error.error_description || error.message || 'An error occurred');
+    } catch (error: unknown) {
+      toast.error(
+        (error instanceof Error && error.message) ||
+          'An unknown error occurred'
+      );
     } finally {
       setLoading(false);
     }

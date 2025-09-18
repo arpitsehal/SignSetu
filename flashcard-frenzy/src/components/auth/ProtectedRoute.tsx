@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { User } from '@supabase/supabase-js'; // Import User type
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null); // Changed from any to User | null
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,9 +43,12 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
             return;
           }
         }
-      } catch (error) {
+      } catch (error: unknown) { // Changed error to unknown
         console.error('Authentication error:', error);
-        toast.error('An error occurred while authenticating');
+        toast.error(
+          (error instanceof Error && error.message) ||
+            'An error occurred while authenticating'
+        );
         router.push('/login');
       } finally {
         setLoading(false);
