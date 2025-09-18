@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { CategoryList } from './CategoryList';
 
@@ -15,18 +17,16 @@ export function CategoryManager() {
       const response = await fetch('/api/categories');
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
-      
+
       // Transform the data to include count
-      const categoriesWithCount = data.map(category => ({
+      const categoriesWithCount = data.map((category: string) => ({
         name: category,
-        count: 0 // You can add an API endpoint to get actual counts
+        count: 0, // You can add an API endpoint to get actual counts
       }));
-      
+
       setCategories(categoriesWithCount);
-    } catch (err) {
-      setError('Failed to load categories');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
