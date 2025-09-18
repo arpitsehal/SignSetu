@@ -1,14 +1,15 @@
-import { NextResponse, NextRequest } from 'next/server'; // Import NextRequest
+import { NextResponse, NextRequest } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Game from '@/models/Game';
 
 export async function GET(
   request: Request,
-  context: { params: { gameId: string } } // Use context directly
+  context: { params: Promise<{ gameId: string }> } // Explicitly type params as a Promise
 ) {
   try {
     await connectToDatabase();
-    const game = await Game.findById(context.params.gameId); // Access params from context
+    const { gameId } = await context.params; // Await context.params to get the actual gameId
+    const game = await Game.findById(gameId);
     if (!game) {
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
@@ -20,13 +21,14 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  context: { params: { gameId: string } } // Use context directly
+  context: { params: Promise<{ gameId: string }> } // Explicitly type params as a Promise
 ) {
   try {
     const { playerId, action, data } = await request.json();
     await connectToDatabase();
 
-    const game = await Game.findById(context.params.gameId); // Access params from context
+    const { gameId } = await context.params; // Await context.params to get the actual gameId
+    const game = await Game.findById(gameId);
     if (!game) {
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
